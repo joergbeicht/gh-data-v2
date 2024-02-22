@@ -35,12 +35,22 @@ jobs:
           # dass multiple Files uploded werden können
           # Wenn das funktioniert können die Artefacts am unteren Ende in Artifacts bei GitHub eingesehen werden
           # 1:n Artefacts sind dort als zip unter dem jeweiligen Namen zu finden
-          path: |
-            dist
-            package.json        
+          # path: |
+          #   dist
+          #   package.json
+          path: dist
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # Hier wird deer download für das Artifact durchgeführt 
+      - name: Get Build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          # Das muss der Name des Artifact sein der oben bei build vergeben wurde
+          name: dist-files
+      # Diese Zeile muss nicht sein, aber sie hilft um Informationen bei Problemen zu sehen    
+      - name: Output contents
+        run: ls
       - name: Deploy
         run: echo "Deploying..."
