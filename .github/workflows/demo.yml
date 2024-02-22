@@ -18,6 +18,15 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      # script-file ist der Identifier des Outputs und frei wählbar!
+      # Mit script-file kann später in einem anderen Job der Wert abgerufen werden
+      # steps ist ein contex bei GitHub Actions
+      # https://docs.github.com/en/actions/learn-github-actions/contexts
+      # .publish entspricht der id siehe unten id: publish
+      # .outputs.something
+      # hier wird der output gepublisht
+      script-file: ${{ steps.publish.outputs.script-file }}
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -25,6 +34,24 @@ jobs:
         run: npm ci
       - name: Build website
         run: npm run build
+      # Angenommen wir wollen ein Datei nach dem build in einem Folder liegt und hier mit dem 
+      # Build Job erstellt wurde in einem späteren Job nutzen, dann mach man das mit id
+      # Das macht man mit Outputs
+      # Ein Job kann Outputs herstellen
+      # Achtung1!: Ein Output ist ein einfacher Wert. Hier also die js-Namen.
+      #           Also nicht das File! Das File wäre ein Artifact.
+      #           Artifacte sind also etwas anderes als Outputs!
+      # Achtung2!: Um Outputs zu benutzen muss der KEY outputs: vor steps in diesem Job 
+      #            definiert werden!
+      - name: Publish JS filename in other Jobs use an Output with id ...
+        id: publish
+        # find ... ist ein regular Linux command das alle js Files findet und mit echo ausgibt
+        #  >> speichert den Wert in einer speziellen Variable mit dem GitHub Befehl $GITHUB_OUTPUT
+        # so etwas wird benötigt für Environment Variablen zu setzen und zu benuzten
+        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
+      # die auskommentierte run: Zeile bewirkt genau das gleiche wie die Zeile darüber. 
+      # es ist nur eine alte syntax. Die obere ist die akutelle Syntax!
+      # run: find dist/assets/*.js -type f -execdir echo '::set-output name=script-file::{}' ';'
       - name: upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -49,8 +76,12 @@ jobs:
         with:
           # Das muss der Name des Artifact sein der oben bei build vergeben wurde
           name: dist-files
-      # Diese Zeile muss nicht sein, aber sie hilft um Informationen bei Problemen zu sehen    
+      # Diese Zeile muss nicht sein, aber sie hilft um Informationen bei Problemen zu sehen
+      # Hier wird der Inhalt des Artifact gelistet. Also der Inhalt des ZIP Files    
       - name: Output contents
         run: ls
+      # Nutzt den publishten output von oben
+      - name: Output filename
+        run: echo "${{ needs.build.outputs.script-file }}"        
       - name: Deploy
         run: echo "Deploying..."
