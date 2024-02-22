@@ -28,11 +28,13 @@ jobs:
       - name: upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: myapp-files
+          name: dist-files
           # path: dist
           # upload von dist Folder und dem File package.json
           # package.json ist nicht notwendig. Es ist nur ein Beispiel um zu zeigen
           # dass multiple Files uploded werden können
+          # Wenn das funktioniert können die Artefacts am unteren Ende in Artifacts bei GitHub eingesehen werden
+          # 1:n Artefacts sind dort als zip unter dem jeweiligen Namen zu finden
           path: |
             dist
             package.json        
