@@ -9,6 +9,30 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v3
+      # Cache muss vor dem was gecacht werden soll stehen  
+      - name: Cache dependencies
+        # github actions cache implementation examples
+        # https://github.com/actions/cache
+        uses: actions/cache@v3
+        # muss mit with konfiguriert werden
+        # Alles was in dem Folder in dem path: ~/.npm steht soll gecacht werden
+        # Dieser Cache wird Maschinenübergreifend bereitgestellt
+        # Mach dir noch einmal klar, dass runs-on: ubuntu-latestjeweils eine
+        # eigene Maschine ist!!!
+        with:
+          path: ~/.npm
+          # key ist notwendig falls der Cache verloren gegangen ist
+          # soll er mit package-lock.json wieder hergestellt werden
+          # weil in package-lock.json ja das Script für npm ci steht
+          # deps-node-modules ist ein frei vergebener Name für den Cache
+          # hashFiles ist eine GitHub Function
+          # mit hashFiles wird für package-lock.json in GitHub ein HashTag erstellt
+          # so... wenn sich der Inhalt beim wiederholten bauen ändert,
+          # wenn also in package-lock.json dependencies geadded oder deleted werden
+          # dann ist der HashTag abweichend von dem vorherigen in GitHub
+          # dann weiss GitHub, dass der Cache veraltet ist!
+          # als folge wird der Cache neu erstellt!
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}        
       - name: Install dependencies
         run: npm ci
       - name: Lint code
@@ -30,6 +54,12 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v3
+      # hier muss der gleiche Cache wie oben benutzt werden, damit das Caching funktioniert
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}        
       - name: Install dependencies
         run: npm ci
       - name: Build website
